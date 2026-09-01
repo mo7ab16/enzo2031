@@ -3,9 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Enzo Fernández Contract Clock — Manchester City</title>
+<title>Enzo Contract Countdown</title>
 <meta name="description" content="A live countdown on Enzo Fernández's Manchester City contract, with a running total of what it has cost so far.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%236CABDD'/><rect x='6' y='13' width='20' height='6' rx='1' fill='%23FFFFFF'/></svg>">
+
+<!-- ===========================================================
+     SHARE CARD. Replace YOURDOMAIN.com in the four URLs below
+     with the real domain once it is registered.
+     og:image MUST be an absolute https URL — a relative path
+     like "/enzo-card.png" will not render on X or WhatsApp.
+     Upload enzo-card.png to the site root alongside this file.
+     =========================================================== -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Contract Clock">
+<meta property="og:title" content="Enzo Contract Countdown">
+<meta property="og:description" content="Enzo Fernández's five-year Manchester City contract, counting down live. £125m fee, expires 30 June 2031.">
+<meta property="og:url" content="https://YOURDOMAIN.com/">
+<meta property="og:image" content="https://YOURDOMAIN.com/enzo-card.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Full time: 30 June 2031 — a countdown on Enzo Fernández's Manchester City contract.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Enzo Contract Countdown">
+<meta name="twitter:description" content="Enzo Fernández's five-year Manchester City contract, counting down live. £125m fee, expires 30 June 2031.">
+<meta name="twitter:image" content="https://YOURDOMAIN.com/enzo-card.png">
+<meta name="twitter:image:alt" content="Full time: 30 June 2031 — a countdown on Enzo Fernández's Manchester City contract.">
+<meta name="twitter:creator" content="@99ovrr_">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%236CABDD'/><circle cx='16' cy='16' r='9.5' fill='%23FFFFFF'/><path d='M16 9.5V16.5H21' fill='none' stroke='%230A202E' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Oswald:wght@500;600;700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -72,8 +96,15 @@
     border-bottom:1px solid var(--hair-2);
   }
   .eyebrow{
+    display:inline-flex; align-items:center; gap:9px;
     font-size:11px; font-weight:700; letter-spacing:.22em; text-transform:uppercase;
     color:var(--ink); margin:0;
+  }
+  .mark{ width:16px; height:16px; flex:none; }
+  .mark circle{ fill:none; stroke:var(--sky); stroke-width:2.2; }
+  .mark path{
+    fill:none; stroke:var(--ink); stroke-width:2.2;
+    stroke-linecap:round; stroke-linejoin:round;
   }
   .top .club{
     font-size:11px; font-weight:600; letter-spacing:.18em; text-transform:uppercase;
@@ -83,13 +114,13 @@
   .hero{ padding:clamp(32px,6vw,64px) 0 clamp(28px,5vw,48px); }
   h1{
     font-family:var(--display); font-weight:900;
-    font-size:clamp(44px, 10.5vw, 122px);
+    font-size:clamp(44px, 12vw, 150px);
     line-height:.86; letter-spacing:-.015em;
     margin:0; text-transform:uppercase; color:var(--ink);
   }
   h1 .accent{ color:var(--sky); }
   .standfirst{
-    margin:22px 0 0; max-width:56ch;
+    margin:22px 0 0; max-width:68ch;
     font-size:clamp(15px,1.6vw,18px); color:var(--dim);
   }
   .standfirst b{ color:var(--ink); font-weight:600; }
@@ -253,9 +284,13 @@
   footer{
     margin-top:clamp(36px,5vw,60px); padding-top:22px;
     border-top:1px solid var(--hair-2);
-    font-size:12.5px; color:var(--dim); max-width:62ch;
+    font-size:12.5px; color:var(--dim);
   }
-  footer p{ margin:0 0 8px; }
+  /* Column width, not column count: the browser fits 3 across the full
+     page, 2 on a tablet, 1 on a phone. Full-bleed single-column prose at
+     1080px would run ~145 characters a line, which is unreadable. */
+  .notes{ columns:260px; column-gap:44px; }
+  .notes p{ margin:0 0 11px; break-inside:avoid; }
   footer strong{ color:var(--ink); font-weight:600; }
   .credit{
     margin-top:22px !important; padding-top:18px; border-top:1px solid var(--hair-2);
@@ -291,7 +326,11 @@
   </div>
 
   <div class="top">
-    <p class="eyebrow">Contract Clock</p>
+    <p class="eyebrow">
+      <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.5"/>
+        <path d="M12 6.5V12.5H16.5"/>
+      </svg>Contract Clock</p>
     <p class="club">Manchester City · Etihad Stadium</p>
   </div>
 
@@ -392,13 +431,15 @@
   </main>
 
   <footer>
-    <p data-show="!dates"><strong>Nothing is signed.</strong> At the time of writing, Enzo Fernández is a Chelsea player and no transfer to Manchester City has been agreed or announced. This page is a shell, published early, and every figure on it is blank until a deal is confirmed.</p>
-    <p data-show="dates"><strong>The deal.</strong> Manchester City announced the signing of Enzo Fernández from Chelsea on 1 September 2026, on a five-year contract keeping him at the Etihad Stadium until the summer of 2031. Expiry here is set to 30 June 2031, the standard end date for a Premier League contract.</p>
-    <p data-show="fee"><strong>The fee.</strong> David Ornstein reported a package worth £125m, matching the British transfer record, after City opened at £104m plus add-ons and Chelsea asked for £135m guaranteed. The per-season figure above is that fee spread evenly across the five seasons of the contract, which is roughly how a club books it.</p>
-    <p data-show="estimate"><strong>The wages are not confirmed.</strong> No salary has been disclosed by either club. This page uses a placeholder of £400,000 a week, and every wage total on it — the tickers, the rates, the combined figure — is only as good as that assumption. Treat it as an illustration, not a report.</p>
-    <p data-show="reported"><strong>The money is an estimate.</strong> Clubs do not publish salaries. The figure used here comes from press reporting and wage trackers, and should be read as an approximation rather than a confirmed number.</p>
-    <p>Per-game figure assumes a 38-match Premier League season. Totals run in real time from the clock on your device.</p>
-    <p>An unofficial fan page. Not affiliated with, endorsed by, or connected to Manchester City FC or Enzo Fernández.</p>
+    <div class="notes">
+      <p data-show="!dates"><strong>Nothing is signed.</strong> At the time of writing, Enzo Fernández is a Chelsea player and no transfer to Manchester City has been agreed or announced. This page is a shell, published early, and every figure on it is blank until a deal is confirmed.</p>
+      <p data-show="dates"><strong>The deal.</strong> Manchester City announced the signing of Enzo Fernández from Chelsea on 1 September 2026, on a five-year contract keeping him at the Etihad Stadium until the summer of 2031. Expiry here is set to 30 June 2031, the standard end date for a Premier League contract.</p>
+      <p data-show="fee"><strong>The fee.</strong> David Ornstein reported a package worth £125m, matching the British transfer record, after City opened at £104m plus add-ons and Chelsea asked for £135m guaranteed. The per-season figure above is that fee spread evenly across the five seasons of the contract, which is roughly how a club books it.</p>
+      <p data-show="estimate"><strong>The wages are not confirmed.</strong> No salary has been disclosed by either club. This page uses a placeholder of £400,000 a week, and every wage total on it — the tickers, the rates, the combined figure — is only as good as that assumption. Treat it as an illustration, not a report.</p>
+      <p data-show="reported"><strong>The money is an estimate.</strong> Clubs do not publish salaries. The figure used here comes from press reporting and wage trackers, and should be read as an approximation rather than a confirmed number.</p>
+      <p>Per-game figure assumes a 38-match Premier League season. Totals run in real time from the clock on your device.</p>
+      <p>An unofficial fan page. Not affiliated with, endorsed by, or connected to Manchester City FC or Enzo Fernández.</p>
+    </div>
     <p class="credit">Website created by <span>@99ovrr_</span> <span>@kaiiesque</span> <span>@OngV_</span> <span>@EscoFiles</span></p>
   </footer>
 
@@ -467,7 +508,23 @@
   var endDate = new Date(endMs);
   $('endline').textContent = endDate.toLocaleDateString('en-GB',
     { day:'numeric', month:'long', year:'numeric' });
-  document.title = 'Enzo Fernández Contract Clock — Manchester City';
+
+  // The headline is sized to fill the page width, which "30 June 2031" does
+  // comfortably. A longer date ("30 September 2031") would not, so step the
+  // size down until it fits. Re-runs once webfonts land and on resize.
+  function fitHeadline(){
+    var h = document.querySelector('h1');
+    if (!h) return;
+    h.style.fontSize = '';
+    var size = parseFloat(getComputedStyle(h).fontSize), guard = 0;
+    while (h.scrollWidth > h.clientWidth + 1 && size > 32 && guard++ < 60){
+      size -= 3;
+      h.style.fontSize = size + 'px';
+    }
+  }
+  fitHeadline();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitHeadline);
+  window.addEventListener('resize', fitHeadline);
 
   // ---- season labels + ticks, on football's 1 July boundary ----
   // The term runs 1 Sep 2026 to 30 Jun 2031: not five calendar years,
