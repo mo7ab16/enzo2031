@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enzo Fernández Contract Clock — Manchester City</title>
+<meta name="description" content="A live countdown on Enzo Fernández's Manchester City contract, with a running total of what it has cost so far.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%236CABDD'/><rect x='6' y='13' width='20' height='6' rx='1' fill='%23FFFFFF'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Oswald:wght@500;600;700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky:    #6CABDD;   /* team light blue  */
+    --ice:    #97C1E6;   /* icy blue         */
+    --white:  #FFFFFF;
+    --silver: #A6A6A6;   /* used sparingly   */
+
+    /* dark shades derived from the sky blue, for text and the board */
+    --ink:     #0A202E;
+    --ink-2:   #12354A;
+    --board:   #061620;
+
+    --hair:  rgba(10,32,46,.14);
+    --hair-2:rgba(166,166,166,.45);
+    --dim:   rgba(10,32,46,.58);
+
+    --display:'Big Shoulders Display','Oswald','Arial Narrow',sans-serif;
+    --body:   'Archivo','Inter',system-ui,-apple-system,sans-serif;
+
+    --pad: clamp(20px, 5vw, 64px);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    font-family:var(--body);
+    color:var(--ink);
+    background:var(--ice);
+    background-image:
+      linear-gradient(180deg, #FFFFFF 0%, #EAF4FB 34%, var(--ice) 100%);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+
+  .wrap{ max-width:1080px; margin:0 auto; padding:var(--pad) var(--pad) 56px; }
+
+  /* ---------- pending strip (auto-hides once CONFIG is filled) ---------- */
+  .pending-strip{
+    display:flex; align-items:center; gap:10px;
+    background:var(--ink);
+    color:rgba(255,255,255,.9);
+    border-radius:5px;
+    padding:12px 16px;
+    margin-bottom:26px;
+    font-size:12px; font-weight:600; letter-spacing:.06em;
+  }
+  .pending-strip .pdot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--silver); flex:none;
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.25} }
+
+  /* ---------- masthead ---------- */
+  .top{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--hair-2);
+  }
+  .eyebrow{
+    font-size:11px; font-weight:700; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--ink); margin:0;
+  }
+  .top .club{
+    font-size:11px; font-weight:600; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--dim); margin:0;
+  }
+
+  .hero{ padding:clamp(32px,6vw,64px) 0 clamp(28px,5vw,48px); }
+  h1{
+    font-family:var(--display); font-weight:900;
+    font-size:clamp(44px, 10.5vw, 122px);
+    line-height:.86; letter-spacing:-.015em;
+    margin:0; text-transform:uppercase; color:var(--ink);
+  }
+  h1 .accent{ color:var(--sky); }
+  .standfirst{
+    margin:22px 0 0; max-width:56ch;
+    font-size:clamp(15px,1.6vw,18px); color:var(--dim);
+  }
+  .standfirst b{ color:var(--ink); font-weight:600; }
+
+  /* ---------- the board ---------- */
+  .board{
+    position:relative;
+    border-radius:6px;
+    background:linear-gradient(180deg, #0B2333 0%, var(--board) 55%, #030E15 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.07),
+      inset 0 0 60px rgba(0,0,0,.6),
+      0 26px 55px -32px rgba(10,32,46,.85);
+    padding:clamp(18px,3vw,28px) clamp(14px,3vw,32px) clamp(20px,3vw,30px);
+    overflow:hidden;
+  }
+  .board::after{
+    content:""; position:absolute; inset:0;
+    background-image:
+      repeating-linear-gradient(0deg,  rgba(3,14,21,.5) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(3,14,21,.5) 0 1px, transparent 1px 3px);
+    pointer-events:none;
+  }
+  .board-head{
+    position:relative; z-index:2;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-bottom:clamp(12px,2vw,20px);
+    font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+    color:rgba(151,193,230,.75);
+  }
+  .live{ display:inline-flex; align-items:center; gap:7px; }
+  .live .dot{
+    width:7px; height:7px; border-radius:50%; background:var(--sky);
+    box-shadow:0 0 8px rgba(108,171,221,.95);
+    animation:blink 1.6s steps(1,end) infinite;
+  }
+  .live.waiting .dot{ background:var(--silver); box-shadow:none; animation:pulse 1.8s ease-in-out infinite; }
+  @keyframes blink{ 0%,55%{opacity:1} 56%,100%{opacity:.22} }
+
+  .cells{
+    position:relative; z-index:2;
+    display:grid; grid-template-columns:repeat(6,1fr); align-items:end;
+  }
+  .cell{ text-align:center; padding:0 4px; }
+  .cell + .cell{ border-left:1px solid rgba(151,193,230,.14); }
+  .cell.split{ border-left:1px solid rgba(151,193,230,.4); }
+
+  .digit{ position:relative; }
+  .ghost, .val{
+    display:block; font-family:var(--display); font-weight:800;
+    font-size:clamp(40px, 8.4vw, 96px); line-height:.9; letter-spacing:.01em;
+    font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+  }
+  .ghost{ position:absolute; inset:0; color:rgba(108,171,221,.10); }
+  .val{
+    position:relative; color:var(--sky);
+    text-shadow:
+      0 0 2px rgba(151,193,230,.85),
+      0 0 16px rgba(108,171,221,.45),
+      0 0 44px rgba(108,171,221,.18);
+  }
+  .val.idle{ color:rgba(151,193,230,.28); text-shadow:none; }
+  .cell .label{
+    margin-top:10px;
+    font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:rgba(255,255,255,.42);
+  }
+
+  /* ---------- progress ---------- */
+  .progress{ margin-top:clamp(28px,4vw,44px); }
+  .prog-head{
+    display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+    font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--dim); margin-bottom:12px;
+  }
+  .prog-head .pct{ color:var(--ink); font-family:var(--display); font-size:20px; letter-spacing:.04em; }
+  .track{
+    position:relative; height:12px; border-radius:2px;
+    background:var(--white); border:1px solid var(--hair-2); overflow:hidden;
+  }
+  .fill{
+    height:100%; width:0;
+    background:linear-gradient(90deg, var(--ice), var(--sky));
+    transition:width .6s ease;
+  }
+  .tick{ position:absolute; top:0; bottom:0; width:1px; background:var(--hair-2); }
+  .seasons{
+    display:flex; justify-content:space-between; margin-top:10px;
+    font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--dim);
+  }
+
+  /* ---------- money ---------- */
+  .money{ margin-top:clamp(34px,5vw,56px); display:grid; gap:14px; grid-template-columns:1fr 1fr; }
+  .panel{ border-radius:6px; padding:clamp(20px,3vw,30px); }
+  .panel.solid{ background:var(--sky); }
+  .panel.outline{ background:var(--white); border:1px solid var(--hair-2); }
+  .panel h2{
+    margin:0 0 14px;
+    font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--ink); opacity:.72;
+  }
+  .sum{
+    font-family:var(--display); font-weight:800;
+    font-size:clamp(34px,5.6vw,64px); line-height:.94; letter-spacing:-.01em;
+    font-variant-numeric:tabular-nums; color:var(--ink); word-break:break-word;
+  }
+  .sum .pence{ font-size:.46em; opacity:.55; }
+  .sum.idle{ opacity:.32; }
+  .alt{ margin-top:8px; font-size:14px; font-variant-numeric:tabular-nums; color:var(--ink); opacity:.62; }
+
+  /* ---------- rate strip ---------- */
+  .rates{
+    margin-top:14px; display:grid; gap:1px; grid-template-columns:repeat(4,1fr);
+    background:var(--hair-2); border:1px solid var(--hair-2);
+    border-radius:6px; overflow:hidden;
+  }
+  .rate{ background:var(--white); padding:18px 14px; }
+  .rate .k{
+    font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--dim);
+  }
+  .rate .v{
+    margin-top:6px; font-family:var(--display); font-weight:700;
+    font-size:clamp(20px,3vw,30px); line-height:1;
+    color:var(--ink); font-variant-numeric:tabular-nums;
+  }
+  .rate .v.idle{ opacity:.3; }
+
+  .wage-note{
+    margin:14px 0 0; font-size:12.5px; color:var(--dim);
+    padding-left:12px; border-left:2px solid var(--silver);
+  }
+  .wage-note strong{ color:var(--ink); font-weight:600; }
+
+  .chip{
+    display:inline-block; vertical-align:middle;
+    margin-left:8px; padding:3px 7px 2px;
+    border:1px solid currentColor; border-radius:3px;
+    font-size:8.5px; font-weight:700; letter-spacing:.14em;
+    opacity:.85;
+  }
+
+  .fee-band{
+    margin-top:clamp(34px,5vw,56px);
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+    background:var(--hair-2); border:1px solid var(--hair-2);
+    border-radius:6px; overflow:hidden;
+  }
+  .fee-item{ background:var(--ink); padding:20px 18px; }
+  .fee-item .k{
+    font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:rgba(255,255,255,.5);
+  }
+  .fee-item .v{
+    margin-top:7px; font-family:var(--display); font-weight:800;
+    font-size:clamp(22px,3.4vw,34px); line-height:1;
+    color:var(--sky); font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- footer ---------- */
+  footer{
+    margin-top:clamp(36px,5vw,60px); padding-top:22px;
+    border-top:1px solid var(--hair-2);
+    font-size:12.5px; color:var(--dim); max-width:62ch;
+  }
+  footer p{ margin:0 0 8px; }
+  footer strong{ color:var(--ink); font-weight:600; }
+  .credit{
+    margin-top:22px !important; padding-top:18px; border-top:1px solid var(--hair-2);
+    font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--dim);
+  }
+  .credit span{ color:var(--ink); letter-spacing:.1em; }
+  .credit span + span::before{ content:"·"; color:var(--silver); margin:0 6px 0 2px; }
+
+  .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  [hidden]{ display:none !important; }
+
+  @media (max-width:760px){
+    .cells{ grid-template-columns:repeat(3,1fr); row-gap:22px; }
+    .cell:nth-child(4){ border-left:none; }
+    .cell.split{ border-left:none; }
+    .money{ grid-template-columns:1fr; }
+    .rates{ grid-template-columns:repeat(2,1fr); }
+    .fee-band{ grid-template-columns:1fr; }
+  }
+  @media (max-width:400px){ .rates{ grid-template-columns:1fr; } }
+  .money{ margin-top:14px; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+  :focus-visible{ outline:2px solid var(--sky); outline-offset:3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="pending-strip" data-show="!dates">
+    <span class="pdot" aria-hidden="true"></span>
+    <span>Transfer not yet official. This page fills itself in once the contract details are added.</span>
+  </div>
+
+  <div class="top">
+    <p class="eyebrow">Contract Clock</p>
+    <p class="club">Manchester City · Etihad Stadium</p>
+  </div>
+
+  <header class="hero">
+    <h1>Full time:<br><span class="accent" id="endline">To be confirmed</span></h1>
+    <p class="standfirst" data-show="dates">
+      A live countdown to the final day of <b>Enzo Fernández's</b> five-year Manchester City
+      contract, signed from Chelsea on 1 September 2026 and running to the summer of 2031.<span data-show="pay">
+      The totals below track what it has cost the club so far.</span>
+    </p>
+    <p class="standfirst" data-show="!dates">
+      A countdown to the final day of <b>Enzo Fernández's</b> Manchester City contract,
+      waiting on a deal. Nothing has been signed — the clock starts when it is.
+    </p>
+  </header>
+
+  <main>
+    <section class="board" aria-labelledby="board-title">
+      <div class="board-head">
+        <span id="board-title">Time remaining</span>
+        <span class="live" id="liveflag"><span class="dot" aria-hidden="true"></span><span id="livetext">Live</span></span>
+      </div>
+      <div class="cells" role="timer">
+        <div class="cell">
+          <div class="digit"><span class="ghost" aria-hidden="true">00</span><span class="val" id="yy">--</span></div>
+          <div class="label">Years</div>
+        </div>
+        <div class="cell">
+          <div class="digit"><span class="ghost" aria-hidden="true">00</span><span class="val" id="mo">--</span></div>
+          <div class="label">Months</div>
+        </div>
+        <div class="cell">
+          <div class="digit"><span class="ghost" aria-hidden="true">00</span><span class="val" id="dd">--</span></div>
+          <div class="label">Days</div>
+        </div>
+        <div class="cell split">
+          <div class="digit"><span class="ghost" aria-hidden="true">00</span><span class="val" id="hh">--</span></div>
+          <div class="label">Hours</div>
+        </div>
+        <div class="cell">
+          <div class="digit"><span class="ghost" aria-hidden="true">00</span><span class="val" id="mi">--</span></div>
+          <div class="label">Minutes</div>
+        </div>
+        <div class="cell">
+          <div class="digit"><span class="ghost" aria-hidden="true">00</span><span class="val" id="ss">--</span></div>
+          <div class="label">Seconds</div>
+        </div>
+      </div>
+      <p class="sr" id="sr-clock" aria-live="polite"></p>
+    </section>
+
+    <section class="progress" aria-labelledby="prog-title">
+      <div class="prog-head">
+        <span id="prog-title">Contract served</span>
+        <span class="pct" id="pct">—</span>
+      </div>
+      <div class="track" id="track">
+        <div class="fill" id="fill"></div>
+      </div>
+      <div class="seasons" id="seasons"></div>
+    </section>
+
+    <section class="fee-band" data-show="fee" aria-label="Transfer fee">
+      <div class="fee-item"><div class="k">Transfer fee</div><div class="v" id="feeTotal">—</div></div>
+      <div class="fee-item"><div class="k">Amortised per season</div><div class="v" id="feeYear">—</div></div>
+      <div class="fee-item"><div class="k">Fee plus wages, full term</div><div class="v" id="feeAll">—</div></div>
+    </section>
+
+    <section class="money">
+      <div class="panel solid">
+        <h2>Wages paid so far <span class="chip" data-show="estimate">Est.</span></h2>
+        <div class="sum idle" id="paid">TBC</div>
+        <div class="alt" id="paidEur" hidden></div>
+      </div>
+      <div class="panel outline">
+        <h2>Wages still to pay <span class="chip" data-show="estimate">Est.</span></h2>
+        <div class="sum idle" id="owed">TBC</div>
+        <div class="alt" id="owedEur" hidden></div>
+      </div>
+    </section>
+
+    <p class="wage-note" data-show="!pay">
+      Neither club has disclosed his wages. These fill in as soon as a figure is reported.
+    </p>
+    <p class="wage-note" data-show="estimate">
+      <strong>The wage figure is an estimate.</strong> Manchester City have not disclosed
+      Enzo Fernández's salary. Every wage total on this page is built from a placeholder of
+      £400,000 a week and will change when a reported figure lands. The transfer fee is not
+      an estimate; the wages are.
+    </p>
+
+    <section class="rates" aria-label="Rate of pay">
+      <div class="rate"><div class="k">Per second</div><div class="v idle" id="rSec">—</div></div>
+      <div class="rate"><div class="k">Per hour</div><div class="v idle" id="rHour">—</div></div>
+      <div class="rate"><div class="k">Per week</div><div class="v idle" id="rWeek">—</div></div>
+      <div class="rate"><div class="k">Per league game</div><div class="v idle" id="rGame">—</div></div>
+    </section>
+  </main>
+
+  <footer>
+    <p data-show="!dates"><strong>Nothing is signed.</strong> At the time of writing, Enzo Fernández is a Chelsea player and no transfer to Manchester City has been agreed or announced. This page is a shell, published early, and every figure on it is blank until a deal is confirmed.</p>
+    <p data-show="dates"><strong>The deal.</strong> Manchester City announced the signing of Enzo Fernández from Chelsea on 1 September 2026, on a five-year contract keeping him at the Etihad Stadium until the summer of 2031. Expiry here is set to 30 June 2031, the standard end date for a Premier League contract.</p>
+    <p data-show="fee"><strong>The fee.</strong> David Ornstein reported a package worth £125m, matching the British transfer record, after City opened at £104m plus add-ons and Chelsea asked for £135m guaranteed. The per-season figure above is that fee spread evenly across the five seasons of the contract, which is roughly how a club books it.</p>
+    <p data-show="estimate"><strong>The wages are not confirmed.</strong> No salary has been disclosed by either club. This page uses a placeholder of £400,000 a week, and every wage total on it — the tickers, the rates, the combined figure — is only as good as that assumption. Treat it as an illustration, not a report.</p>
+    <p data-show="reported"><strong>The money is an estimate.</strong> Clubs do not publish salaries. The figure used here comes from press reporting and wage trackers, and should be read as an approximation rather than a confirmed number.</p>
+    <p>Per-game figure assumes a 38-match Premier League season. Totals run in real time from the clock on your device.</p>
+    <p>An unofficial fan page. Not affiliated with, endorsed by, or connected to Manchester City FC or Enzo Fernández.</p>
+    <p class="credit">Website created by <span>@99ovrr_</span> <span>@kaiiesque</span> <span>@OngV_</span> <span>@EscoFiles</span></p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ==========================================================
+     Dates and fee confirmed. Wage is an ESTIMATE.
+
+     Wages are quoted weekly in football, so the weekly figure is
+     the source of truth here — deriving it back out of an annual
+     number would show £398,631/wk instead of a clean £400,000.
+
+     When a real salary is reported: update weeklyGbp and set
+     wageConfirmed to true, which removes the "estimate" labelling
+     everywhere in one go.
+     ========================================================== */
+  var CONFIG = {
+    start:         '2026-09-01T00:00:00+01:00',  // signed on deadline day
+    end:           '2031-06-30T23:59:59+01:00',  // expiry, summer 2031
+    weeklyGbp:     400000,                       // ESTIMATE — not disclosed
+    wageConfirmed: false,                        // true once a real figure lands
+    feeGbp:        125000000,                    // reported package, Ornstein / The Athletic
+    eurPerGbp:     1.16                          // only used for the smaller € line
+  };
+  /* ========================================================== */
+
+  var GAMES_PER_SEASON = 38;
+
+  var startMs = CONFIG.start ? new Date(CONFIG.start).getTime() : null;
+  var endMs   = CONFIG.end   ? new Date(CONFIG.end).getTime()   : null;
+
+  var datesOk = !!(startMs && endMs && !isNaN(startMs) && !isNaN(endMs) && endMs > startMs);
+  var payOk   = datesOk && typeof CONFIG.weeklyGbp === 'number' && CONFIG.weeklyGbp > 0;
+  var estOk   = payOk && !CONFIG.wageConfirmed;
+  var repOk   = payOk && !!CONFIG.wageConfirmed;
+  var feeOk   = typeof CONFIG.feeGbp === 'number' && CONFIG.feeGbp > 0;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var nf = new Intl.NumberFormat('en-GB');
+
+  function pad(n){ return n < 10 ? '0' + n : String(n); }
+
+  // Two independent flags drive the copy: whether the dates are known,
+  // and whether a wage figure is known. data-show="pay" shows an element
+  // only when pay is known; data-show="!pay" only when it isn't.
+  var FLAGS = { dates: datesOk, pay: payOk, estimate: estOk, reported: repOk, fee: feeOk };
+  Array.prototype.forEach.call(document.querySelectorAll('[data-show]'), function(node){
+    var rule = node.getAttribute('data-show');
+    var neg  = rule.charAt(0) === '!';
+    var key  = neg ? rule.slice(1) : rule;
+    node.hidden = neg ? !!FLAGS[key] : !FLAGS[key];
+  });
+
+  if (!datesOk){
+    ['yy','mo','dd','hh','mi','ss'].forEach(function(k){ $(k).classList.add('idle'); });
+    $('livetext').textContent = 'Awaiting deal';
+    $('liveflag').classList.add('waiting');
+    return;                       // nothing to count yet
+  }
+
+  // ---- headline + season ticks, once the dates exist ----
+  var endDate = new Date(endMs);
+  $('endline').textContent = endDate.toLocaleDateString('en-GB',
+    { day:'numeric', month:'long', year:'numeric' });
+  document.title = 'Enzo Fernández Contract Clock — Manchester City';
+
+  // ---- season labels + ticks, on football's 1 July boundary ----
+  // The term runs 1 Sep 2026 to 30 Jun 2031: not five calendar years,
+  // but five seasons. Work in seasons, not anniversaries.
+  var startDate  = new Date(startMs);
+  var firstYear  = startDate.getFullYear() - (startDate.getMonth() < 6 ? 1 : 0);
+  var lastYear   = endDate.getFullYear()   - (endDate.getMonth()   < 6 ? 1 : 0);
+
+  var seasons = [];
+  for (var y = firstYear; y <= lastYear; y++){
+    seasons.push(String(y).slice(2) + '/' + String(y + 1).slice(2));
+    if (y > firstYear){
+      var boundary = new Date(y, 6, 1).getTime();          // 1 July
+      var pos = (boundary - startMs) / (endMs - startMs) * 100;
+      if (pos > 0 && pos < 100){
+        var t = document.createElement('span');
+        t.className = 'tick';
+        t.style.left = pos.toFixed(2) + '%';
+        $('track').appendChild(t);
+      }
+    }
+  }
+  $('seasons').innerHTML = seasons.map(function(s){ return '<span>' + s + '</span>'; }).join('');
+
+  // ---- pay rates, all derived from the weekly figure ----
+  var WEEK_MS = 604800000;
+  var totalGbp = 0;
+  if (payOk){
+    var wk = CONFIG.weeklyGbp;
+    totalGbp = wk * ((endMs - startMs) / WEEK_MS);
+    var set = function(id, txt){ $(id).textContent = txt; $(id).classList.remove('idle'); };
+    set('rSec',  '£' + (wk / 604800).toFixed(2));
+    set('rHour', '£' + nf.format(Math.round(wk / 168)));
+    set('rWeek', '£' + nf.format(wk));
+    set('rGame', '£' + nf.format(Math.round(wk * 52 / GAMES_PER_SEASON)));
+    $('paidEur').hidden = false;
+    $('owedEur').hidden = false;
+  }
+
+  // ---- transfer fee, and what it looks like in the accounts ----
+  if (feeOk){
+    $('feeTotal').textContent = '£' + nf.format(CONFIG.feeGbp);
+    $('feeYear').textContent  = '£' + nf.format(Math.round(CONFIG.feeGbp / seasons.length));
+    $('feeAll').textContent   = payOk
+      ? '£' + nf.format(Math.round(CONFIG.feeGbp + totalGbp))
+      : '—';
+  }
+
+  function money(node, altNode, value){
+    var whole = Math.floor(value);
+    var pence = Math.floor((value - whole) * 100);
+    node.classList.remove('idle');
+    node.innerHTML = '£' + nf.format(whole) + '<span class="pence">.' + pad(pence) + '</span>';
+    altNode.textContent = '€' + nf.format(Math.floor(value * CONFIG.eurPerGbp));
+  }
+
+  function breakdown(from, to){
+    var y = to.getFullYear() - from.getFullYear();
+    var mo = to.getMonth() - from.getMonth();
+    var d = to.getDate() - from.getDate();
+    var h = to.getHours() - from.getHours();
+    var mi = to.getMinutes() - from.getMinutes();
+    var s = to.getSeconds() - from.getSeconds();
+    if (s < 0){ s += 60; mi--; }
+    if (mi < 0){ mi += 60; h--; }
+    if (h < 0){ h += 24; d--; }
+    if (d < 0){ d += new Date(to.getFullYear(), to.getMonth(), 0).getDate(); mo--; }
+    if (mo < 0){ mo += 12; y--; }
+    return { y:y, mo:mo, d:d, h:h, mi:mi, s:s };
+  }
+
+  var lastSecond = -1, timer;
+
+  function tick(){
+    var now = Date.now();
+
+    if (now >= endMs){
+      ['yy','mo','dd','hh','mi','ss'].forEach(function(k){ $(k).textContent = '00'; });
+      $('sr-clock').textContent = 'The contract has expired.';
+      if (payOk){ money($('paid'), $('paidEur'), totalGbp); money($('owed'), $('owedEur'), 0); }
+      $('pct').textContent = '100%';
+      $('fill').style.width = '100%';
+      clearInterval(timer);
+      return;
+    }
+
+    var b = breakdown(new Date(now), endDate);
+    if (b.s !== lastSecond){
+      lastSecond = b.s;
+      $('yy').textContent = pad(b.y); $('mo').textContent = pad(b.mo);
+      $('dd').textContent = pad(b.d); $('hh').textContent = pad(b.h);
+      $('mi').textContent = pad(b.mi); $('ss').textContent = pad(b.s);
+      ['yy','mo','dd','hh','mi','ss'].forEach(function(k){ $(k).classList.remove('idle'); });
+      if (b.s === 0){
+        $('sr-clock').textContent = b.y + ' years, ' + b.mo + ' months, ' + b.d +
+                                    ' days and ' + b.h + ' hours remaining.';
+      }
+    }
+
+    var served = Math.min(Math.max((now - startMs) / (endMs - startMs), 0), 1);
+    var p = served * 100;
+    $('pct').textContent = (p < 10 ? p.toFixed(2) : p.toFixed(1)) + '%';
+    $('fill').style.width = p.toFixed(3) + '%';
+
+    if (payOk){
+      var paid = totalGbp * served;
+      money($('paid'), $('paidEur'), paid);
+      money($('owed'), $('owedEur'), totalGbp - paid);
+    }
+  }
+
+  var slow = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  tick();
+  timer = setInterval(tick, slow ? 1000 : 80);
+})();
+</script>
+</body>
+</html>
